@@ -1,0 +1,30 @@
+name: CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+
+    # This step creates the key file from the GitHub Secret
+    - name: Create SSH Key
+      run: |
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > deploy_key.pem
+        chmod 600 deploy_key.pem
+
+    # This runs your existing script using the key we just created
+    - name: Deploy to EC2
+      run: |
+        chmod +x deploy/deploy.sh
+        ./deploy/deploy.sh ${{ secrets.EC2_HOST }} deploy_key.pem
